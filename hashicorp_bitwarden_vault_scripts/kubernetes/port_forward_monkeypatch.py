@@ -20,6 +20,11 @@ from kubernetes.stream import portforward
 
 
 class monkey_patch_requests:
+    """
+    Monkey patches urllib3 such that the requests library can access a port-forward setup by the Kubernetes python client.
+    Able to be able to be used with `with`, rather than patching for the duration of the program.
+    """
+
     def __init__(self, api_instance):
         self.original_creation_connection = urllib3.util.connection.create_connection
         self.api_instance = api_instance
@@ -29,6 +34,8 @@ class monkey_patch_requests:
         if isinstance(dns_name, bytes):
             dns_name = dns_name.decode()
         dns_name = dns_name.split(".")
+
+        # Sanity check DNS records that appear to be from our Kubernetes cluster, we check for `local` rather than using the original made-up address to ensure any certificates on the vault replica are likely to support it.
         if dns_name[-1] != "local":
             return self.original_creation_connection(address, *args, **kwargs)
         if len(dns_name) not in (4, 5):
@@ -36,6 +43,8 @@ class monkey_patch_requests:
         namespace = dns_name[-3]
         name = dns_name[0]
         port = address[1]
+
+        # break down the address provided to figure out what to actually connect to
         if len(dns_name) == 4:
             if dns_name[1] in ("svc", "service"):
                 service = self.api_instance.read_namespaced_service(name, namespace)
@@ -69,6 +78,8 @@ class monkey_patch_requests:
                         )
             elif dns_name[1] != "pod":
                 raise RuntimeError("Unsupported resource type: %s" % dns_name[1])
+
+        # Perform actual port forwarding, return the resulting socket
         pf = portforward(
             self.api_instance.connect_get_namespaced_pod_portforward,
             name,

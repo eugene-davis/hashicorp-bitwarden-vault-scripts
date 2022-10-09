@@ -19,11 +19,18 @@ import requests
 
 
 class bitwarden:
-    def __init__(self, url_base):
+    """
+    Wraps the BitWarden CLI API
+    """
+
+    def __init__(self, url_base: str):
         self.url_base = url_base
         self.check_server_status()
 
     def check_server_status(self):
+        """
+        Checks if the server is running and unlocked
+        """
         try:
             response = requests.get(f"{self.url_base}/status")
         except requests.exceptions.ConnectionError as e:
@@ -43,7 +50,10 @@ class bitwarden:
                 "Bitwarden client not unlocked, please unlock and set BW_SESSION"
             )
 
-    def get_secret(self, name):
+    def get_secret(self, name: str):
+        """
+        Searches for the specified secret and returns it
+        """
         logging.info("Searching for %s in BitWarden", name)
         items = requests.get(
             f"{self.url_base}/list/object/items",

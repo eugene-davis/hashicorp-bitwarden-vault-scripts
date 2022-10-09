@@ -32,9 +32,9 @@ from kubernetes.client.api import core_v1_api
 
 
 def get_unseal_keys(
-    secret_name,
-    url,
-    key_fields,
+    secret_name: str,
+    url: str,
+    key_fields: List[str],
 ):
     bw = bitwarden(url)
     unseal_key = bw.get_secret(secret_name)
@@ -48,7 +48,7 @@ def get_unseal_keys(
 
 
 def unseal_vault(
-    unseal_keys,
+    unseal_keys: List[str],
     replica_count: int,
     namespace: str,
     pod_prefix: str,
