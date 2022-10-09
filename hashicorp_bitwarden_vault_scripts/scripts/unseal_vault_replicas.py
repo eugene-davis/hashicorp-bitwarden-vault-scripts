@@ -86,7 +86,7 @@ def unseal_vault(
                 rs = requests.Session()
                 client.session = rs
                 rs.verify = ca_cert
-            if not client.sys.is_sealed():
+            if client.sys.is_sealed():
                 client.sys.submit_unseal_keys(keys=unseal_keys)
             else:
                 logging.info("%s is already unsealed", name)
